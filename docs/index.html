@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 1 — Hello Cloud API</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #1e293b;
+      font: 16px/1.7 Arial, sans-serif;
+    }
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 32px;
+      background: #fff;
+      border-radius: 16px;
+    }
+    h1, h2, h3 { line-height: 1.4; }
+    h1, h2 { color: #174ea6; }
+    h2 {
+      margin-top: 36px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .info, .note {
+      background: #eff6ff;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eaf2ff; }
+    a { color: #174ea6; overflow-wrap: anywhere; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    figure { margin: 24px 0; }
+    figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: auto;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+    .phone { max-height: 720px; }
+    figcaption {
+      margin-top: 8px;
+      text-align: center;
+      color: #475569;
+      font-size: 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 12px;
+      background: #f1f5f9;
+      border-radius: 6px;
+    }
+    details { margin: 14px 0; }
+    footer {
+      margin-top: 30px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      main { margin: 10px; padding: 18px; }
+      h1 { font-size: 25px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Bài 1. Lập trình trên máy ảo đám mây đầu tiên</h1>
+
+  <div class="info">
+    <p><strong>Họ tên:</strong> Nguyễn Nguyên Khôi</p>
+    <p><strong>MSSV:</strong> 2324802010262</p>
+    <p><strong>Lớp:</strong> D23CNTT03</p>
+    <p><strong>Ngày thực hiện:</strong> 05/11/2026</p>
+    <p><strong>Múi giờ ghi nhận:</strong> Việt Nam (UTC+7)</p>
+    <p>
+      <strong>Mã nguồn:</strong>
+      <a href="https://github.com/khoin8507-afk/notes-api-2324802010262">
+        notes-api-2324802010262
+      </a>
+    </p>
+  </div>
+
+  <h2>1. Mục tiêu</h2>
+  <p>
+    Cấp phát môi trường phát triển trên GitHub Codespaces,
+    xây dựng API Hello Cloud bằng Node.js và Express,
+    truy cập API từ điện thoại qua Internet, so sánh môi trường
+    cá nhân với đám mây và liên hệ 5 đặc tính NIST.
+  </p>
+
+  <h2>2. Quá trình triển khai</h2>
+  <ol>
+    <li>
+      Tạo repo template tdmu-cloud-lab trong tài khoản cá nhân,
+      sử dụng cấu hình devcontainer trong tài liệu bài học,
+      rồi tạo repo notes-api-2324802010262 từ template.
+    </li>
+    <li>Khởi tạo Codespace từ nhánh main.</li>
+    <li>
+      Lần đầu gặp lỗi cài Docker do tùy chọn Moby không hỗ trợ
+      Debian trixie. Bổ sung <code>"moby": false</code>
+      trong cấu hình Docker feature rồi rebuild thành công.
+    </li>
+    <li>
+      Khởi tạo dự án Node.js, cài Express và tách ứng dụng
+      thành <code>src/app.js</code>, <code>src/server.js</code>.
+    </li>
+    <li>Chạy API bằng <code>npm start</code> tại cổng 3000.</li>
+    <li>
+      Chuyển cổng sang Public, truy cập bằng điện thoại qua 4G,
+      sau đó chuyển lại Private.
+    </li>
+    <li>
+      Kiểm tra Billing Usage và tạo trang báo cáo trong thư mục docs.
+    </li>
+  </ol>
+
+  <h3>Thời gian khởi tạo</h3>
+  <ul>
+    <li>Bắt đầu khởi tạo: 13:42 ngày 05/11/2026.</li>
+    <li>Kiểm tra node -v thành công: khoảng 13:50.</li>
+    <li>
+      Tổng thời gian khoảng 8 phút, bao gồm xử lý lỗi Docker
+      và rebuild; các mốc được ghi nhận đến phút.
+    </li>
+  </ul>
+  <p class="note">
+    Lần thực hiện này chưa đạt mục tiêu dưới 2 phút.
+    Khoảng 8 phút là tổng quá trình từ lúc bắt đầu đến khi kiểm tra
+    Node.js thành công, không phải phép đo riêng thời gian cấp phát
+    một môi trường có cấu hình đúng ngay từ đầu.
+  </p>
+
+  <h2>3. Kết quả API</h2>
+  <p>
+    Endpoint <code>GET /</code> trả JSON có các trường
+    message, host, platform, cpus, memoryGB, uptimeSec và time.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Trường</th><th>Kết quả ghi nhận</th></tr>
+      <tr><td>message</td><td>Xin chào từ đám mây!</td></tr>
+      <tr><td>host</td><td>codespaces-eb2bb2</td></tr>
+      <tr><td>platform</td><td>Linux 6.8.0-1064-azure</td></tr>
+      <tr><td>cpus</td><td>2</td></tr>
+      <tr><td>memoryGB</td><td>7.8</td></tr>
+      <tr>
+        <td>Truy cập từ điện thoại</td>
+        <td>Thành công qua mạng 4G; cổng đã chuyển lại Private.</td>
+      </tr>
+    </table>
+  </div>
+  <p>
+    app.js khai báo ứng dụng và endpoint; server.js khởi động
+    máy chủ. Việc tách này giúp tái sử dụng ứng dụng cho kiểm thử
+    và triển khai serverless với bộ chuyển đổi phù hợp ở bài sau.
+  </p>
+
+  <h2>4. So sánh máy cá nhân và Codespace</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>Máy cá nhân</th>
+          <th>Codespace</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Thời gian đến khi chạy được node -v</td>
+          <td>
+            Node.js đã cài sẵn; kiểm tra thành công phiên bản
+            v24.20.0. Không có số đo thời gian cài đặt ban đầu.
+          </td>
+          <td>
+            Khoảng 8 phút, từ 13:42 đến khoảng 13:50,
+            gồm sửa lỗi cấu hình và rebuild.
+            Node.js v22.23.4.
+          </td>
+        </tr>
+        <tr>
+          <td>Số CPU, RAM</td>
+          <td>
+            Intel Core i3-12100F; 4 lõi, 8 bộ xử lý logic.
+            RAM lắp đặt 16 GB, hệ thống sử dụng được khoảng 15.8 GB.
+            Nguồn: Task Manager.
+          </td>
+          <td>
+            2 CPU logic; RAM 7.8 GB.
+            Nguồn: os.cpus() và os.totalmem() trong API.
+          </td>
+        </tr>
+        <tr>
+          <td>Hệ điều hành</td>
+          <td>Windows 10 Pro 22H2, build 19045.6466.</td>
+          <td>Linux 6.8.0-1064-azure theo API.</td>
+        </tr>
+        <tr>
+          <td>Cách truy cập từ thiết bị khác</td>
+          <td>
+            Trong LAN cần dùng địa chỉ IP của máy, cấu hình
+            ứng dụng và tường lửa phù hợp. Truy cập ngoài Internet
+            cần thêm giải pháp mạng; chưa thử trong bài này.
+          </td>
+          <td>
+            Chuyển tiếp cổng 3000, bật Public và truy cập
+            URL HTTPS app.github.dev từ điện thoại qua 4G.
+          </td>
+        </tr>
+        <tr>
+          <td>Chi phí, đo bằng gì</td>
+          <td>
+            Chi phí máy, điện, Internet và bảo trì.
+            Chưa đo riêng chi phí cho buổi thực hành.
+          </td>
+          <td>
+            Billing ghi nhận máy 2-core dùng 0.32 giờ máy,
+            tương đương khoảng 0.64 core-giờ.
+            Giá trị compute trước khấu trừ $0.06,
+            số tiền tính phí $0.
+            Lưu trữ hiển thị 0 GB-month,
+            giá trị trước khấu trừ &lt; $0.01, tính phí $0.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">
+    Số liệu Billing là ảnh chụp tại thời điểm kiểm tra trong
+    kỳ tháng 11/2026, không nhất thiết là tổng cuối cùng của buổi học.
+    CPU/RAM từ API phản ánh những gì Node.js nhìn thấy trong
+    môi trường chạy. Hai môi trường có điều kiện chuẩn bị khác nhau,
+    nên chưa đủ cơ sở kết luận môi trường nào thiết lập nhanh hơn.
+  </p>
+
+  <h2>5. Liên hệ 5 đặc tính điện toán đám mây của NIST</h2>
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>Đặc tính</th>
+        <th>Thao tác và giải thích</th>
+      </tr>
+      <tr>
+        <td>Tự phục vụ theo yêu cầu</td>
+        <td>
+          Tự bấm Create codespace để yêu cầu môi trường phát triển,
+          không cần quản trị viên cấp máy thủ công.
+        </td>
+      </tr>
+      <tr>
+        <td>Truy cập mạng rộng</td>
+        <td>
+          Sử dụng môi trường qua trình duyệt và truy cập API
+          từ điện thoại qua mạng 4G bằng URL HTTPS.
+        </td>
+      </tr>
+      <tr>
+        <td>Gộp tài nguyên</td>
+        <td>
+          Môi trường được cấp trên hạ tầng chung do nhà cung cấp
+          quản lý; sinh viên không chọn máy chủ vật lý cụ thể.
+          Đây là liên hệ về mô hình dịch vụ, chưa trực tiếp
+          kiểm chứng cách phân bổ phần cứng.
+        </td>
+      </tr>
+      <tr>
+        <td>Co giãn nhanh</td>
+        <td>
+          Nền tảng hỗ trợ thay đổi cấu hình máy trong các lựa chọn
+          được phép. Bài này mới thực hiện cấp phát môi trường,
+          chưa thử đổi cấu hình hoặc tự động mở rộng API theo tải.
+        </td>
+      </tr>
+      <tr>
+        <td>Dịch vụ đo lường được</td>
+        <td>
+          Billing Usage ghi nhận compute theo giờ máy và loại máy,
+          cùng lưu trữ theo GB-month. Máy 2-core đã ghi nhận
+          0.32 giờ máy, tương đương khoảng 0.64 core-giờ.
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>6. Trả lời câu hỏi phản biện</h2>
+
+  <h3>6.1. Host có thay đổi sau Stop/Start không?</h3>
+  <p>
+    Host lần đầu là codespaces-eb2bb2. Chưa thực hiện lần gọi
+    sau một ngày nên chưa có kết quả so sánh thực nghiệm.
+    Host có thể được giữ nguyên khi khởi động lại cùng Codespace.
+    Host giống hoặc khác không đủ để kết luận môi trường nằm trên
+    cùng hay khác máy chủ vật lý, vì đây là tên môi trường
+    mà ứng dụng nhìn thấy.
+  </p>
+
+  <h3>6.2. Codespaces là IaaS, PaaS hay SaaS?</h3>
+  <p>
+    Xét sản phẩm hoàn chỉnh mà sinh viên trực tiếp sử dụng,
+    em lập luận Codespaces gần nhất với SaaS: một môi trường
+    phát triển tích hợp được cung cấp qua dịch vụ.
+    GitHub quản lý hạ tầng, máy ảo và hệ điều hành nền.
+    Sinh viên quản lý mã nguồn, thư viện và có thể cấu hình
+    container, runtime. Khả năng tùy biến này có nét tương đồng
+    với PaaS. Việc có máy ảo bên dưới không đồng nghĩa toàn bộ
+    dịch vụ là IaaS; cần xét phạm vi và trách nhiệm quản lý.
+  </p>
+
+  <h3>6.3. Hai hạn chế được khắc phục và một rủi ro mới</h3>
+  <ul>
+    <li>
+      Giảm việc cài đặt lặp lại công cụ trên từng máy phòng lab
+      nhờ cấu hình môi trường dùng chung.
+    </li>
+    <li>
+      Giúp tiếp tục làm việc qua trình duyệt từ thiết bị khác,
+      giảm phụ thuộc vào một máy cá nhân cụ thể.
+    </li>
+    <li>
+      Rủi ro: API có thể bị người ngoài truy cập khi cổng Public.
+      Biện pháp đã thực hiện: chỉ bật để kiểm tra rồi chuyển lại Private.
+    </li>
+  </ul>
+
+  <h2>7. Ảnh minh chứng</h2>
+
+  <details open>
+    <summary>7.1. Khởi chạy API</summary>
+    <figure>
+      <a href="images/01-api-running.png">
+        <img src="images/01-api-running.png"
+             alt="Terminal chạy API tại cổng 3000" loading="lazy">
+      </a>
+      <figcaption>
+        Hình 1. Chạy API bằng npm start.
+        Ảnh chụp trước khi chuyển .gitignore ra thư mục gốc.
+      </figcaption>
+    </figure>
+  </details>
+
+  <details open>
+    <summary>7.2. JSON trên trình duyệt máy tính</summary>
+    <figure>
+      <a href="images/02-api-browser.png">
+        <img src="images/02-api-browser.png"
+             alt="JSON trả về trên máy tính" loading="lazy">
+      </a>
+      <figcaption>Hình 2. Kết quả GET / trên máy tính.</figcaption>
+    </figure>
+  </details>
+
+  <details open>
+    <summary>7.3. Truy cập bằng điện thoại qua 4G</summary>
+    <figure>
+      <a href="images/03-api-phone.png">
+        <img class="phone" src="images/03-api-phone.png"
+             alt="Điện thoại truy cập API qua mạng 4G" loading="lazy">
+      </a>
+      <figcaption>Hình 3. API truy cập được từ điện thoại.</figcaption>
+    </figure>
+  </details>
+
+  <details>
+    <summary>7.4. Cổng đã về Private</summary>
+    <figure>
+      <img src="images/04-port-private.png"
+           alt="Cổng chuyển tiếp ở trạng thái Private" loading="lazy">
+      <figcaption>Hình 4. Chuyển cổng về Private sau khi thử.</figcaption>
+    </figure>
+  </details>
+
+  <details open>
+    <summary>7.5. Billing Usage</summary>
+    <figure>
+      <a href="images/05-billing-usage.png">
+        <img src="images/05-billing-usage.png"
+             alt="Billing compute 2-core dùng 0.32 giờ máy" loading="lazy">
+      </a>
+      <figcaption>
+        Hình 5. Compute và lưu trữ được đo lường trên Billing.
+      </figcaption>
+    </figure>
+  </details>
+
+  <details>
+    <summary>7.6. Cấu hình máy cá nhân</summary>
+    <figure>
+      <img src="images/06-local-cpu.png"
+           alt="CPU Intel Core i3-12100F, 4 lõi 8 bộ xử lý logic"
+           loading="lazy">
+      <figcaption>Hình 6. CPU máy cá nhân.</figcaption>
+    </figure>
+    <figure>
+      <img src="images/07-local-memory.png"
+           alt="RAM máy cá nhân 16 GB" loading="lazy">
+      <figcaption>Hình 7. RAM máy cá nhân.</figcaption>
+    </figure>
+    <figure>
+      <img src="images/08-local-windows.png"
+           alt="Windows 10 Pro 22H2" loading="lazy">
+      <figcaption>Hình 8. Phiên bản Windows.</figcaption>
+    </figure>
+    <figure>
+      <img src="images/09-local-node.png"
+           alt="Node.js v24.20.0 trên máy cá nhân" loading="lazy">
+      <figcaption>Hình 9. Node.js trên máy cá nhân.</figcaption>
+    </figure>
+  </details>
+
+  <h2>8. Kết luận</h2>
+  <p>
+    Đã xây dựng API Hello Cloud, truy cập thành công trên máy tính
+    và điện thoại qua mạng 4G, sau đó chuyển cổng về Private.
+    Billing cho thấy tài nguyên được đo lường dù số tiền tính phí
+    tại thời điểm kiểm tra bằng $0. Quá trình khởi tạo gặp lỗi Docker
+    và đã được khắc phục bằng điều chỉnh cấu hình.
+    Bài thực hành chưa kiểm chứng tự động co giãn theo tải
+    và chưa có kết quả so sánh host sau một ngày.
+  </p>
+
+  <h2>9. Tài liệu tham khảo</h2>
+  <ul>
+    <li>
+      <a href="https://csrc.nist.gov/pubs/sp/800/145/final">
+        NIST SP 800-145 — The NIST Definition of Cloud Computing
+      </a>
+    </li>
+    <li>
+      <a href="https://docs.github.com/en/codespaces">
+        Tài liệu GitHub Codespaces
+      </a>
+    </li>
+    <li>
+      <a href="https://docs.github.com/en/pages">
+        Tài liệu GitHub Pages
+      </a>
+    </li>
+  </ul>
+
+  <footer>
+    Báo cáo Bài 1 — MSSV 2324802010262 — Ngày 05/11/2026.
+  </footer>
+</main>
+</body>
+</html>
