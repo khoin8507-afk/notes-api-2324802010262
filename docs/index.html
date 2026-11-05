@@ -8,8 +8,8 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: #f1f5f9;
-      color: #1e293b;
+      background: #f3f3f3;
+      color: #202020;
       font: 16px/1.7 Arial, sans-serif;
     }
     main {
@@ -17,21 +17,32 @@
       margin: 30px auto;
       padding: 32px;
       background: #fff;
-      border-radius: 16px;
+      border-radius: 12px;
+      border: 1px solid #dedede;
+      box-shadow: 0 8px 30px rgba(0,0,0,.04);
     }
     h1, h2, h3 { line-height: 1.4; }
-    h1, h2 { color: #174ea6; }
+    h1, h2 { color: #171717; }
     h2 {
       margin-top: 36px;
       padding-bottom: 8px;
-      border-bottom: 2px solid #e2e8f0;
+      border-bottom: 2px solid #dddddd;
     }
     .info, .note {
-      background: #eff6ff;
+      background: #f5f5f5;
       padding: 16px 20px;
       border-radius: 10px;
       margin: 16px 0;
     }
+    a { text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #555; }
+    a:focus-visible, summary:focus-visible {
+      outline: 2px solid #222; outline-offset: 4px;
+    }
+    .info { border-left: 4px solid #222; }
+    .note { border-left: 4px solid #888; }
+    .info p { margin: 6px 0; }
+    td:first-child { font-weight: 600; }
     .table-wrap { overflow-x: auto; }
     table {
       width: 100%;
@@ -39,15 +50,15 @@
       margin: 18px 0;
     }
     th, td {
-      border: 1px solid #cbd5e1;
+      border: 1px solid #d4d4d4;
       padding: 12px;
       text-align: left;
       vertical-align: top;
     }
-    th { background: #eaf2ff; }
-    a { color: #174ea6; overflow-wrap: anywhere; }
+    th { background: #ededed; }
+    a { color: #171717; overflow-wrap: anywhere; }
     code {
-      background: #f1f5f9;
+      background: #f3f3f3;
       padding: 2px 5px;
       border-radius: 4px;
     }
@@ -57,27 +68,27 @@
       max-width: 100%;
       height: auto;
       margin: auto;
-      border: 1px solid #cbd5e1;
+      border: 1px solid #d4d4d4;
       border-radius: 8px;
     }
     .phone { max-height: 720px; }
     figcaption {
       margin-top: 8px;
       text-align: center;
-      color: #475569;
+      color: #555555;
       font-size: 14px;
     }
     summary {
       cursor: pointer;
       font-weight: bold;
       padding: 12px;
-      background: #f1f5f9;
+      background: #f3f3f3;
       border-radius: 6px;
     }
     details { margin: 14px 0; }
     footer {
       margin-top: 30px;
-      color: #64748b;
+      color: #666666;
       font-size: 14px;
     }
     @media (max-width: 600px) {
@@ -212,14 +223,14 @@
             Nguồn: Task Manager.
           </td>
           <td>
-            2 CPU logic; RAM 7.8 GB.
+            2 CPU logic; RAM khoảng 7.8 GiB (trường memoryGB).
             Nguồn: os.cpus() và os.totalmem() trong API.
           </td>
         </tr>
         <tr>
           <td>Hệ điều hành</td>
           <td>Windows 10 Pro 22H2, build 19045.6466.</td>
-          <td>Linux 6.8.0-1064-azure theo API.</td>
+          <td>Linux, phiên bản kernel 6.8.0-1064-azure theo API.</td>
         </tr>
         <tr>
           <td>Cách truy cập từ thiết bị khác</td>
@@ -255,7 +266,10 @@
     Số liệu Billing là ảnh chụp tại thời điểm kiểm tra trong
     kỳ tháng 11/2026, không nhất thiết là tổng cuối cùng của buổi học.
     CPU/RAM từ API phản ánh những gì Node.js nhìn thấy trong
-    môi trường chạy. Hai môi trường có điều kiện chuẩn bị khác nhau,
+    môi trường chạy; memoryGB được tính bằng số byte chia cho
+    1024 mũ 3 nên đơn vị kỹ thuật là GiB. Chuỗi platform cho biết
+    loại hệ điều hành và phiên bản kernel, chưa xác định bản phân phối Linux.
+    Hai môi trường có điều kiện chuẩn bị khác nhau,
     nên chưa đủ cơ sở kết luận môi trường nào thiết lập nhanh hơn.
   </p>
 
@@ -330,6 +344,8 @@
     container, runtime. Khả năng tùy biến này có nét tương đồng
     với PaaS. Việc có máy ảo bên dưới không đồng nghĩa toàn bộ
     dịch vụ là IaaS; cần xét phạm vi và trách nhiệm quản lý.
+    Đây là lập luận theo góc nhìn sử dụng IDE như một dịch vụ,
+    không phải nhãn phân loại chính thức do GitHub công bố.
   </p>
 
   <h3>6.3. Hai hạn chế được khắc phục và một rủi ro mới</h3>
@@ -435,13 +451,26 @@
 
   <h2>8. Kết luận</h2>
   <p>
-    Đã xây dựng API Hello Cloud, truy cập thành công trên máy tính
-    và điện thoại qua mạng 4G, sau đó chuyển cổng về Private.
-    Billing cho thấy tài nguyên được đo lường dù số tiền tính phí
-    tại thời điểm kiểm tra bằng $0. Quá trình khởi tạo gặp lỗi Docker
-    và đã được khắc phục bằng điều chỉnh cấu hình.
-    Bài thực hành chưa kiểm chứng tự động co giãn theo tải
-    và chưa có kết quả so sánh host sau một ngày.
+    Bài thực hành đã triển khai API Hello Cloud bằng Node.js và Express
+    trên GitHub Codespaces. Endpoint GET / trả về thông tin môi trường;
+    API được truy cập thành công từ máy tính và điện thoại qua mạng 4G.
+    Sau khi kiểm tra, cổng 3000 đã được chuyển lại Private.
+  </p>
+  <p>
+    Trải nghiệm minh họa trực tiếp khả năng tự phục vụ theo yêu cầu,
+    truy cập mạng rộng và dịch vụ đo lường được. Billing tại thời điểm
+    chụp ghi nhận 0.32 giờ máy 2-core, tương đương khoảng 0.64 core-giờ,
+    với số tiền tính phí $0. Gộp tài nguyên và co giãn nhanh được liên hệ
+    theo mô hình, khả năng của nền tảng; bài này chưa trực tiếp kiểm chứng
+    việc phân bổ phần cứng hoặc tự động mở rộng ứng dụng theo tải.
+  </p>
+  <p>
+    Quá trình từ lúc bắt đầu đến khi kiểm tra Node.js thành công mất
+    khoảng 8 phút, gồm sửa lỗi Docker và rebuild, nên lần thực hiện này
+    chưa đạt mục tiêu dưới 2 phút. Chưa có số đo cài đặt ban đầu trên
+    máy cá nhân hoặc kết quả đối chiếu host sau một ngày.
+    Khung mã nguồn đã tách app.js và server.js để thuận tiện
+    tiếp tục phát triển ở các bài sau.
   </p>
 
   <h2>9. Tài liệu tham khảo</h2>
