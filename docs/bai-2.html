@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 2 — Docker, GHCR và CloudSim Plus</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f3f3f3;
+      color: #202020;
+      font: 16px/1.7 Arial, sans-serif;
+    }
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 32px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #dedede;
+      box-shadow: 0 8px 30px rgba(0,0,0,.04);
+    }
+    h1, h2, h3 { line-height: 1.4; }
+    h1, h2 { color: #171717; }
+    h2 {
+      margin-top: 36px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #dddddd;
+    }
+    .info, .note {
+      background: #f5f5f5;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+    a { text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #555; }
+    a:focus-visible, summary:focus-visible {
+      outline: 2px solid #222; outline-offset: 4px;
+    }
+    .info { border-left: 4px solid #222; }
+    .note { border-left: 4px solid #888; }
+    .info p { margin: 6px 0; }
+    td:first-child { font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+    th, td {
+      border: 1px solid #d4d4d4;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #ededed; }
+    a { color: #171717; overflow-wrap: anywhere; }
+    code {
+      background: #f3f3f3;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    figure { margin: 24px 0; }
+    figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: auto;
+      border: 1px solid #d4d4d4;
+      border-radius: 8px;
+    }
+    .phone { max-height: 720px; }
+    figcaption {
+      margin-top: 8px;
+      text-align: center;
+      color: #555555;
+      font-size: 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 12px;
+      background: #f3f3f3;
+      border-radius: 6px;
+    }
+    details { margin: 14px 0; }
+    footer {
+      margin-top: 30px;
+      color: #666666;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      main { margin: 10px; padding: 18px; }
+      h1 { font-size: 25px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="Báo cáo thực hành"><a href="index.html">Về báo cáo Bài 1</a></nav>
+  <section id="bai-2" aria-labelledby="bai-2-title">
+    <h1 id="bai-2-title">Bài 2. Ảo hóa, container và mô phỏng trung tâm dữ liệu</h1>
+    <div class="info">
+      <p><strong>Họ tên</strong> Nguyễn Nguyên Khôi</p>
+      <p><strong>MSSV</strong> 2324802010262 · <strong>Lớp</strong> D23CNTT03</p>
+      <p><strong>Ngày thực hiện</strong> 12/11/2026</p>
+    </div>
+
+    <h3>1. Đóng gói API và phát hành image</h3>
+    <p>
+      API Hello Cloud của Bài 1 được đóng gói bằng Docker với image nền
+      <code>node:22-alpine</code>. Dockerfile dùng <code>npm ci --omit=dev</code>
+      để cài các thư viện cần khi chạy và khởi động API dưới người dùng
+      <code>node</code>.
+    </p>
+    <p>
+      Image <code>ghcr.io/khoin8507-afk/notes-api:1.0</code> được phát hành
+      cho <code>linux/amd64</code>. Sau khi đăng xuất GHCR và xóa image
+      cục bộ, lệnh <code>docker pull</code> tải lại thành công. Digest
+      trả về khớp với lần push.
+    </p>
+    <ul>
+      <li><a href="https://github.com/khoin8507-afk/notes-api-2324802010262/blob/main/Dockerfile">Xem Dockerfile</a></li>
+      <li><a href="https://github.com/users/khoin8507-afk/packages/container/package/notes-api">Xem package notes-api trên GitHub</a></li>
+    </ul>
+
+    <h3>2. So sánh máy ảo Codespaces và container</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Tiêu chí</th><th scope="col">Codespace</th><th scope="col">Container notes2</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Thời gian khởi động</td>
+            <td>Khoảng 8 phút ở Bài 1, gồm sửa lỗi Docker và rebuild.</td>
+            <td>0.403 giây theo dòng <code>real</code>. Phép đo gồm tạo container tạm từ image có sẵn, chạy lệnh Node ngắn rồi thoát.</td>
+          </tr>
+          <tr>
+            <td>Lưu trữ</td>
+            <td>Hạn mức lưu trữ theo đề là 15 GB-tháng.</td>
+            <td>Docker hiển thị 251 MB Disk Usage và 63.3 MB Content Size cho image.</td>
+          </tr>
+          <tr>
+            <td>Nhân hệ điều hành</td>
+            <td>VM có kernel riêng. <code>uname -r</code> trong Codespace trả về <code>6.8.0-1070-azure</code>.</td>
+            <td>Dùng chung kernel với môi trường chạy Docker. <code>uname -r</code> trong container trả về cùng phiên bản.</td>
+          </tr>
+          <tr>
+            <td>Mức cô lập</td>
+            <td>VM cô lập ở lớp ảo hóa và có hệ điều hành khách.</td>
+            <td>Container cô lập tiến trình bằng namespaces và giới hạn tài nguyên bằng cgroups.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Hai phép đo thời gian có phạm vi khác nhau. GB-tháng là đơn vị sử dụng
+      lưu trữ, còn MB trong kết quả Docker là đơn vị kích thước.
+    </p>
+    <p>
+      Hai bản sao trả về hostname khác nhau và cùng báo <code>cpus: 2</code>,
+      <code>memoryGB: 7.8</code>. Tại thời điểm đo, <code>notes2</code> dùng
+      15.29 MiB trên giới hạn 128 MiB. <code>docker inspect</code> xác nhận
+      giới hạn 0.5 CPU và 134217728 byte RAM.
+    </p>
+
+    <h3>3. Kết quả mô phỏng CloudSim Plus</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Lần</th><th scope="col">Thay đổi so với lần 0</th>
+            <th scope="col">Cloudlet hoàn thành / đã gửi</th>
+            <th scope="col">FinishTime lớn nhất (giây mô phỏng)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>Giữ nguyên, 2 VM, 4 cloudlet, TimeShared</td><td>4/4</td><td>20.1</td></tr>
+          <tr><td>1</td><td>Tăng từ 2 lên 4 VM</td><td>4/4</td><td>45.6</td></tr>
+          <tr><td>2</td><td>Tăng từ 4 lên 8 cloudlet</td><td>4/8</td><td>40.1, tính trên 4 tác vụ đã hoàn thành</td></tr>
+          <tr><td>3</td><td>Đổi sang SpaceShared, giữ 2 VM và 4 cloudlet</td><td>4/4</td><td>20.1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Ở lần 1, host có 8 lõi trong khi 4 VM yêu cầu tổng cộng 16 lõi.
+      Bảng ghi nhận VM 0 và VM 1 thực thi tác vụ. Các cloudlet bắt đầu ở
+      25.6 giây, muộn hơn lần 0, trong khi thời gian thực thi vẫn là 20.0 giây.
+      Ở lần 2, cloudlet 4–7 còn ở trạng thái <code>INEXEC</code> khi mô phỏng
+      kết thúc. Nguyên nhân dừng sớm chưa được xác định.
+    </p>
+    <p>
+      Phép thử bổ sung với 2 VM, 8 cloudlet và SpaceShared hoàn thành
+      8/8 tác vụ. Bốn tác vụ đầu hoàn thành ở 20.1 giây. Bốn tác vụ
+      còn lại bắt đầu ở 20.2 giây và hoàn thành ở 40.3 giây.
+    </p>
+
+    <h3>4. Ảnh minh chứng</h3>
+    <details>
+      <summary>Build image và kiểm tra kích thước</summary>
+      <figure>
+        <a href="images/bai2/01-docker-build.png">
+          <img src="images/bai2/01-docker-build.png" alt="Build image và kiểm tra kích thước" loading="lazy">
+        </a>
+        <figcaption>Build image và kiểm tra kích thước.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>Hai bản sao API và giới hạn RAM trong docker stats</summary>
+      <figure>
+        <a href="images/bai2/02-docker-hai-container.png">
+          <img src="images/bai2/02-docker-hai-container.png" alt="Hai bản sao API và giới hạn RAM trong docker stats" loading="lazy">
+        </a>
+        <figcaption>Hai bản sao API và giới hạn RAM trong docker stats.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>Thời gian chạy, phiên bản kernel và giới hạn CPU/RAM</summary>
+      <figure>
+        <a href="images/bai2/03-docker-do-tai-nguyen.png">
+          <img src="images/bai2/03-docker-do-tai-nguyen.png" alt="Thời gian chạy, phiên bản kernel và giới hạn CPU/RAM" loading="lazy">
+        </a>
+        <figcaption>Thời gian chạy, phiên bản kernel và giới hạn CPU/RAM.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>Push thành công image lên GHCR</summary>
+      <figure>
+        <a href="images/bai2/04-ghcr-push.png">
+          <img src="images/bai2/04-ghcr-push.png" alt="Push thành công image lên GHCR" loading="lazy">
+        </a>
+        <figcaption>Push thành công image lên GHCR.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>CloudSim lần 0 — cấu hình gốc</summary>
+      <figure>
+        <a href="images/bai2/05-cloudsim-lan-0.png">
+          <img src="images/bai2/05-cloudsim-lan-0.png" alt="CloudSim lần 0 — cấu hình gốc" loading="lazy">
+        </a>
+        <figcaption>CloudSim lần 0 — cấu hình gốc.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>CloudSim lần 1 — tăng số VM</summary>
+      <figure>
+        <a href="images/bai2/06-cloudsim-lan-1.png">
+          <img src="images/bai2/06-cloudsim-lan-1.png" alt="CloudSim lần 1 — tăng số VM" loading="lazy">
+        </a>
+        <figcaption>CloudSim lần 1 — tăng số VM.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>CloudSim lần 2 — tăng số cloudlet</summary>
+      <figure>
+        <a href="images/bai2/07-cloudsim-lan-2.png">
+          <img src="images/bai2/07-cloudsim-lan-2.png" alt="CloudSim lần 2 — tăng số cloudlet" loading="lazy">
+        </a>
+        <figcaption>CloudSim lần 2 — tăng số cloudlet.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>CloudSim lần 2 — trạng thái của cả 8 cloudlet</summary>
+      <figure>
+        <a href="images/bai2/08-cloudsim-lan-2-trang-thai.png">
+          <img src="images/bai2/08-cloudsim-lan-2-trang-thai.png" alt="CloudSim lần 2 — trạng thái của cả 8 cloudlet" loading="lazy">
+        </a>
+        <figcaption>CloudSim lần 2 — trạng thái của cả 8 cloudlet.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>CloudSim lần 3 — SpaceShared với 4 cloudlet</summary>
+      <figure>
+        <a href="images/bai2/09-cloudsim-lan-3.png">
+          <img src="images/bai2/09-cloudsim-lan-3.png" alt="CloudSim lần 3 — SpaceShared với 4 cloudlet" loading="lazy">
+        </a>
+        <figcaption>CloudSim lần 3 — SpaceShared với 4 cloudlet.</figcaption>
+      </figure>
+    </details>
+    <details>
+      <summary>Thử bổ sung — SpaceShared với 8 cloudlet</summary>
+      <figure>
+        <a href="images/bai2/10-cloudsim-space-shared-8.png">
+          <img src="images/bai2/10-cloudsim-space-shared-8.png" alt="Thử bổ sung — SpaceShared với 8 cloudlet" loading="lazy">
+        </a>
+        <figcaption>Thử bổ sung — SpaceShared với 8 cloudlet.</figcaption>
+      </figure>
+    </details>
+    <h3>5. Trả lời câu hỏi phản biện</h3>
+    <ol>
+      <li>
+        <p><strong>Vì sao API trong notes2 vẫn báo RAM máy chủ dù đã giới hạn 128 MiB? Ứng dụng Java hoặc Node.js cần lưu ý gì?</strong></p>
+        <p>
+          API gọi <code>os.totalmem()</code> để đọc tổng bộ nhớ hệ thống mà
+          Node.js nhìn thấy. Trong lần đo, API vẫn trả về <code>memoryGB: 7.8</code>.
+          Docker áp dụng giới hạn 128 MiB cho container qua cgroups.
+          <code>docker stats</code> hiển thị <code>15.29 MiB / 128 MiB</code>
+          và <code>docker inspect</code> xác nhận giới hạn 134217728 byte.
+          Khi đặt heap cho Java hoặc Node.js, cần dựa vào giới hạn thực tế
+          của container và chừa dung lượng cho bộ nhớ ngoài heap, chẳng hạn
+          bộ đệm, stack và bộ nhớ native. Nếu tổng mức sử dụng vượt giới hạn,
+          tiến trình có thể bị hệ điều hành dừng do hết bộ nhớ.
+        </p>
+      </li>
+      <li>
+        <p><strong>Time-shared và space-shared khác nhau ra sao trong lần 3? Nhà cung cấp nên chọn chính sách nào cho gói giá rẻ?</strong></p>
+        <p>
+          Time-shared chia thời gian CPU giữa các cloudlet đang chạy.
+          Space-shared cấp lõi cho từng cloudlet và cho các tác vụ còn lại
+          đợi đến khi đủ lõi. Ở lần 3, mỗi VM có 4 lõi và nhận hai cloudlet,
+          mỗi tác vụ cần 2 lõi. Cả hai chạy đồng thời, nên cả lần 0 và lần 3
+          đều hoàn thành 4/4 tác vụ ở 20.1 giây mô phỏng. Trong phép thử
+          bổ sung với 8 cloudlet, SpaceShared chạy thành hai lượt và hoàn
+          thành 8/8 tác vụ ở 40.3 giây.
+        </p>
+        <p>
+          Với gói giá rẻ có tải biến động và chấp nhận hiệu năng dao động,
+          nhà cung cấp có thể chọn time-shared để chia sẻ CPU và tận dụng
+          công suất nhàn rỗi. Khi nhiều khách hàng cùng tăng tải, thời gian
+          xử lý có thể tăng.
+        </p>
+      </li>
+      <li>
+        <p><strong>Mô phỏng giúp ích gì trước khi thuê hạ tầng thật? Kết quả có thể lệch thực tế ở đâu?</strong></p>
+        <p>
+          Mô phỏng cho phép thử số lượng host, VM, tác vụ và chính sách
+          lập lịch trước khi trả tiền thuê máy. Ví dụ, lần 1 yêu cầu tổng
+          cộng 16 lõi VM trên host có 8 lõi và chỉ ghi nhận hai VM chạy
+          cloudlet. Kết quả mô phỏng phụ thuộc các giả định về tải, CPU,
+          mạng và lưu trữ. Trên hạ tầng thật, độ trễ mạng, I/O, tải biến động
+          và tranh chấp tài nguyên có thể làm thời gian xử lý thay đổi.
+        </p>
+      </li>
+    </ol>
+  </section>
+  <footer>Báo cáo Bài 2 — MSSV 2324802010262.</footer>
+</main>
+</body>
+</html>
