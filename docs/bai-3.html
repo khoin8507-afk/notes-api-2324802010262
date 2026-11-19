@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 3 — Lưu trữ phân tán</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f3f3f3;
+      color: #202020;
+      font: 16px/1.7 Arial, sans-serif;
+    }
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 32px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #dedede;
+      box-shadow: 0 8px 30px rgba(0,0,0,.04);
+    }
+    h1, h2, h3 { line-height: 1.4; }
+    h1, h2 { color: #171717; }
+    h2 {
+      margin-top: 36px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #dddddd;
+    }
+    .info, .note {
+      background: #f5f5f5;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+    a { text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #555; }
+    a:focus-visible, summary:focus-visible {
+      outline: 2px solid #222; outline-offset: 4px;
+    }
+    .info { border-left: 4px solid #222; }
+    .note { border-left: 4px solid #888; }
+    .info p { margin: 6px 0; }
+    td:first-child { font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+    th, td {
+      border: 1px solid #d4d4d4;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #ededed; }
+    a { color: #171717; overflow-wrap: anywhere; }
+    code {
+      background: #f3f3f3;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    figure { margin: 24px 0; }
+    figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: auto;
+      border: 1px solid #d4d4d4;
+      border-radius: 8px;
+    }
+    .phone { max-height: 720px; }
+    figcaption {
+      margin-top: 8px;
+      text-align: center;
+      color: #555555;
+      font-size: 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 12px;
+      background: #f3f3f3;
+      border-radius: 6px;
+    }
+    details { margin: 14px 0; }
+    footer {
+      margin-top: 30px;
+      color: #666666;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      main { margin: 10px; padding: 18px; }
+      h1 { font-size: 25px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+<nav aria-label="Báo cáo thực hành"><a href="index.html">Bài 1</a> · <a href="bai-2.html">Bài 2</a></nav>
+<h1>Bài 3. Lưu trữ phân tán với NoSQL và lưu trữ đối tượng</h1>
+<div class="info">
+<p><strong>Sinh viên</strong> Nguyễn Nguyên Khôi</p>
+<p><strong>MSSV</strong> 2324802010262 · <strong>Lớp</strong> D23CNTT03</p>
+<p><strong>Ngày thực hiện</strong> 19/11/2026</p>
+<p><a href="https://github.com/khoin8507-afk/notes-api-2324802010262">Kho mã nguồn</a></p>
+</div>
+<h2>1. Mục tiêu</h2>
+<p>Mở rộng API Hello Cloud để quản lý ghi chú trên MongoDB Atlas, lưu tệp đính kèm trên Supabase Storage và đo mức giảm số tài liệu phải kiểm tra khi dùng chỉ mục. Bài thực hành cũng đối chiếu cơ chế nhân bản của Atlas với HDFS.</p>
+
+<h2>2. Cấu hình và triển khai</h2>
+<ul>
+<li><strong>MongoDB Atlas.</strong> Project <code>cloud-lab</code>, cụm Free <code>notes-cluster</code> tại AWS Hong Kong (<code>ap-east-1</code>), database <code>notes</code>. Tài khoản <code>notes_app</code> có quyền <code>readWrite</code> trên database này. Danh sách IP dùng <code>0.0.0.0/0</code> cho bài thực hành từ Codespaces.</li>
+<li><strong>Supabase Storage.</strong> Project <code>cloud-lab-notes</code> có bucket công khai <code>attachments</code>. Node.js dùng khóa máy chủ để tải tệp và lưu <code>attachmentUrl</code> trong tài liệu ghi chú. Tệp thử được giới hạn 2 MiB ở API.</li>
+<li><strong>Mã nguồn.</strong> <code>src/db.js</code> kết nối Atlas, <code>src/models/note.js</code> định nghĩa model và chỉ mục, <code>src/storage.js</code> khởi tạo Storage khi cần, <code>src/routes/notes.js</code> xử lý CRUD và upload. <code>src/server.js</code> kết nối Atlas trước khi lắng nghe ở cổng 3000.</li>
+<li><strong>Biến môi trường.</strong> <code>MONGODB_URI</code>, <code>SUPABASE_URL</code> và <code>SUPABASE_SERVICE_KEY</code> được đặt trong <code>.env</code>. <code>git check-ignore .env</code> trả về tên tệp và <code>git ls-files -- .env</code> không trả về dòng nào.</li>
+</ul>
+<details><summary>Minh chứng cấu hình dịch vụ và Git</summary>
+<figure><a href="images/bai3/04-bai3-atlas-quyen-notes-app.png"><img src="images/bai3/04-bai3-atlas-quyen-notes-app.png" alt="Quyền readWrite trên database notes" loading="lazy"></a><figcaption>Quyền readWrite trên database notes</figcaption></figure>
+<figure><a href="images/bai3/08-bai3-supabase-bucket-attachments.png"><img src="images/bai3/08-bai3-supabase-bucket-attachments.png" alt="Bucket attachments có nhãn Public" loading="lazy"></a><figcaption>Bucket attachments có nhãn Public</figcaption></figure>
+<figure><a href="images/bai3/09-bai3-git-bo-qua-env.png"><img src="images/bai3/09-bai3-git-bo-qua-env.png" alt="Git bỏ qua .env" loading="lazy"></a><figcaption>Git bỏ qua .env</figcaption></figure>
+
+</details>
+<h2>3. Kiểm thử API và tệp đính kèm</h2>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Thao tác</th><th scope="col">Yêu cầu</th><th scope="col">Kết quả quan sát</th></tr></thead>
+<tbody>
+<tr><td>Tạo</td><td><code>POST /notes</code></td><td>201 · Trả ghi chú mới có _id</td></tr>
+<tr><td>Đọc danh sách</td><td><code>GET /notes?tag=nosql</code></td><td>200 · Trả ghi chú có tag nosql</td></tr>
+<tr><td>Đọc theo ID</td><td><code>GET /notes/:id</code></td><td>200 · Trả đúng ghi chú</td></tr>
+<tr><td>Cập nhật</td><td><code>PUT /notes/:id</code></td><td>200 · Trả tiêu đề và nội dung đã sửa</td></tr>
+<tr><td>Xóa</td><td><code>DELETE /notes/:id</code></td><td>204 · Phản hồi không có nội dung</td></tr>
+<tr><td>Dữ liệu thiếu</td><td><code>POST /notes</code> thiếu title</td><td>400 · Dữ liệu gửi lên không hợp lệ</td></tr>
+<tr><td>ID đã xóa</td><td><code>GET /notes/:id</code> sau khi xóa</td><td>404 · Không tìm thấy ghi chú</td></tr>
+<tr><td>Đính kèm</td><td><code>POST /notes/:id/attachment</code>, trường file</td><td>200 · Mở attachmentUrl và đọc được nội dung “Tep thu Bai 3”</td></tr>
+</tbody></table></div>
+<p>Lần tải tệp đầu tiên gặp lỗi quyền RLS. Sau khi cấu hình lại khóa máy chủ của Supabase và khởi động lại API, thao tác tải tệp trả 200.</p>
+<details><summary>Minh chứng CRUD</summary>
+<figure><a href="images/bai3/14-bai3-crud-create-201.png"><img src="images/bai3/14-bai3-crud-create-201.png" alt="Tạo ghi chú thành công với mã 201" loading="lazy"></a><figcaption>Tạo ghi chú thành công với mã 201</figcaption></figure>
+<figure><a href="images/bai3/15-bai3-crud-read-update-200.png"><img src="images/bai3/15-bai3-crud-read-update-200.png" alt="Đọc, lọc và cập nhật ghi chú với mã 200" loading="lazy"></a><figcaption>Đọc, lọc và cập nhật ghi chú với mã 200</figcaption></figure>
+<figure><a href="images/bai3/17-bai3-crud-400-204-404.png"><img src="images/bai3/17-bai3-crud-400-204-404.png" alt="Kiểm tra mã 400, 204 và 404" loading="lazy"></a><figcaption>Kiểm tra mã 400, 204 và 404</figcaption></figure>
+</details>
+<details open><summary>Minh chứng upload và mở tệp</summary>
+<figure><a href="images/bai3/20-bai3-upload-thanh-cong-200.png"><img src="images/bai3/20-bai3-upload-thanh-cong-200.png" alt="API tải tệp thành công và lưu attachmentUrl" loading="lazy"></a><figcaption>API tải tệp thành công và lưu attachmentUrl</figcaption></figure>
+<figure><a href="images/bai3/22-bai3-attachment-open.png"><img src="images/bai3/22-bai3-attachment-open.png" alt="Nội dung tệp đính kèm hiển thị trên trình duyệt" loading="lazy"></a><figcaption>Nội dung tệp đính kèm hiển thị trên trình duyệt</figcaption></figure>
+</details>
+
+<h2>4. Đo hiệu quả của chỉ mục</h2>
+<p><code>node scripts/seed.js</code> chèn 2.000 ghi chú mẫu. Collection có 2.001 tài liệu trong lần đo, gồm 2.000 ghi chú mẫu và một ghi chú thử upload. <code>node scripts/explain.js</code> chạy cùng bộ lọc <code>{ tags: 'docker' }</code> với <code>explain('executionStats')</code>. Một truy vấn dùng <code>$natural</code> để ép quét toàn bộ, truy vấn còn lại dùng <code>hint('tags_1')</code>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Cách truy vấn</th><th scope="col">docsExamined</th><th scope="col">nReturned</th><th scope="col">Thời gian</th></tr></thead>
+<tbody><tr><td>Quét toàn bộ</td><td>2.001</td><td>571</td><td>1 ms</td></tr>
+<tr><td>Dùng chỉ mục tags_1</td><td>571</td><td>571</td><td>1 ms</td></tr></tbody></table></div>
+<p class="note">Quét toàn bộ kiểm tra số tài liệu gấp <strong>2.001 ÷ 571 ≈ 3,50 lần</strong> so với dùng chỉ mục. Chỉ mục giảm khoảng 71,5% số tài liệu phải kiểm tra. Hai truy vấn có cùng thời gian đo 1 ms.</p>
+<figure><a href="images/bai3/23-bai3-explain.png"><img src="images/bai3/23-bai3-explain.png" alt="Kết quả seed.js và explain.js trong Codespaces" loading="lazy"></a><figcaption>Kết quả seed.js và explain.js trong Codespaces</figcaption></figure>
+
+<h2>5. So sánh nhân bản Atlas và HDFS</h2>
+<figure><div class="table-wrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 284" role="img" aria-labelledby="diagram-title diagram-desc" style="width:100%;min-width:620px;height:auto">
+<title id="diagram-title">So sánh nhân bản Atlas và HDFS</title>
+<desc id="diagram-desc">Primary sao chép thay đổi tới hai Secondary. NameNode quản lý vị trí của ba bản sao khối A trên ba DataNode.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#555"/></marker></defs>
+<g fill="#f5f5f5" stroke="#bbb"><rect x="8" y="8" width="364" height="268" rx="12"/><rect x="388" y="8" width="364" height="268" rx="12"/></g>
+<g fill="#fff" stroke="#555">
+<rect x="108" y="63" width="164" height="50" rx="6"/>
+<rect x="26" y="187" width="152" height="53" rx="6"/><rect x="202" y="187" width="152" height="53" rx="6"/>
+<rect x="476" y="63" width="188" height="50" rx="6"/>
+<rect x="398" y="187" width="108" height="53" rx="6"/><rect x="516" y="187" width="108" height="53" rx="6"/><rect x="634" y="187" width="108" height="53" rx="6"/>
+</g>
+<g fill="none" stroke="#555" stroke-width="2" marker-end="url(#arrow)">
+<path d="M153 113L102 185"/><path d="M227 113L278 185"/>
+<path d="M519 113L452 185" stroke-dasharray="5 4"/><path d="M570 113V185" stroke-dasharray="5 4"/><path d="M621 113L688 185" stroke-dasharray="5 4"/>
+</g>
+<g font-family="Arial,sans-serif" fill="#222" text-anchor="middle" font-size="13">
+<text x="190" y="38" font-size="18" font-weight="bold">MongoDB Atlas</text><text x="570" y="38" font-size="18" font-weight="bold">HDFS</text>
+<text x="190" y="84">Primary · 00-01</text><text x="190" y="102">Nhận thao tác ghi</text>
+<text x="190" y="153">Sao chép thay đổi</text>
+<text x="102" y="209">Secondary · 00-00</text><text x="102" y="227">Bản sao dữ liệu</text>
+<text x="278" y="209">Secondary · 00-02</text><text x="278" y="227">Bản sao dữ liệu</text>
+<text x="570" y="84">NameNode</text><text x="570" y="102">Metadata và vị trí khối</text>
+<text x="452" y="209">DataNode 1</text><text x="452" y="227">Bản sao khối A</text>
+<text x="570" y="209">DataNode 2</text><text x="570" y="227">Bản sao khối A</text>
+<text x="688" y="209">DataNode 3</text><text x="688" y="227">Bản sao khối A</text>
+<text x="570" y="260">Nét đứt biểu thị quản lý vị trí khối</text>
+</g></svg></div><figcaption>Vai trò Atlas theo ảnh Metrics. Phía HDFS minh họa ba bản sao của cùng một khối tệp.</figcaption></figure>
+<p>Atlas có một Primary và hai Secondary tại thời điểm chụp. Các Secondary duy trì bản sao dữ liệu bằng cách áp dụng thay đổi từ oplog. Trong HDFS, tệp được chia thành các khối. DataNode lưu bản sao của từng khối, còn NameNode quản lý metadata và vị trí các khối.</p>
+<figure><a href="images/bai3/25-bai3-atlas-replica-set.png"><img src="images/bai3/25-bai3-atlas-replica-set.png" alt="Metrics của cụm Atlas tại AWS Hong Kong với một Primary và hai Secondary" loading="lazy"></a><figcaption>Metrics của cụm Atlas tại AWS Hong Kong với một Primary và hai Secondary</figcaption></figure>
+
+<h2>6. Trả lời câu hỏi phản biện</h2>
+<ol>
+<li><p><strong>Điều gì xảy ra với 2 triệu tài liệu?</strong> Nếu tỷ lệ tài liệu có tag <code>docker</code> giữ gần 28,5%, quét toàn bộ sẽ kiểm tra khoảng 2 triệu tài liệu, còn truy vấn dùng chỉ mục kiểm tra khoảng 571.000 tài liệu. Đây là ước tính khối lượng quét, dựa trên phân bố tag của bộ mẫu. Giới hạn 100 thao tác/giây của Atlas Free áp dụng cho thao tác cơ sở dữ liệu. Độ trễ còn phụ thuộc kích thước tài liệu, bộ nhớ đệm và tải đồng thời nên cần đo riêng.</p></li>
+<li><p><strong>Vì sao lưu tệp ngoài MongoDB?</strong> Lưu nội dung tệp trong Storage giúp giữ tài liệu ghi chú nhỏ và cho phép tải tệp trực tiếp qua URL. MongoDB chỉ cần giữ <code>attachmentUrl</code> cùng dữ liệu ghi chú. Khi thay hoặc xóa ghi chú, ứng dụng cần quản lý vòng đời đối tượng Storage để tránh tệp không còn được tham chiếu.</p></li>
+<li><p><strong>Con số ba có ý nghĩa gì?</strong> Ba bản sao giúp dữ liệu vẫn có thể phục vụ khi một nút gặp sự cố. Trong replica set có ba thành viên bỏ phiếu, hai phiếu tạo thành đa số để bầu Primary. Trong HDFS, hệ số nhân bản ba áp dụng cho từng khối tệp. Các bản sao nằm trên DataNode và NameNode theo dõi vị trí của chúng.</p></li>
+</ol>
+
+<h2>7. Kết luận</h2>
+<p>API thực hiện được CRUD trên Atlas và trả URL mở được cho tệp lưu trên Supabase. Với bộ lọc thử nghiệm, dùng chỉ mục kiểm tra 571 tài liệu so với 2.001 tài liệu khi quét toàn bộ. Sơ đồ đối chiếu cho thấy Atlas nhân bản dữ liệu của replica set, còn HDFS nhân bản theo khối tệp.</p>
+<footer>Bài 3 · Nguyễn Nguyên Khôi · MSSV 2324802010262</footer>
+</main>
+</body>
+</html>
