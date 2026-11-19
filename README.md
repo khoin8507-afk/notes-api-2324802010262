@@ -26,23 +26,3 @@ Sau khi chèn 2.000 ghi chú mẫu, phép đo với tag `docker` cho thấy qué
 
 [Báo cáo Bài 3, gồm ảnh explain.js và sơ đồ Atlas–HDFS](https://khoin8507-afk.github.io/notes-api-2324802010262/bai-3.html)
 
-## Chạy API
-
-Dùng Node.js 22 và npm. Tạo `.env` cạnh `package.json`, rồi điền các giá trị của bạn.
-
-```dotenv
-MONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/notes
-SUPABASE_URL=https://PROJECT_REF.supabase.co
-SUPABASE_SERVICE_KEY=YOUR_SERVER_KEY
-```
-
-Giữ `.env` trong danh sách bỏ qua của Git. Dùng khóa Supabase phía máy chủ.
-
-```bash
-npm ci
-npm start
-```
-
-Kiểm tra `GET http://localhost:3000/` và `GET http://localhost:3000/notes`. Có thể đổi cổng bằng biến môi trường `PORT`.
-
-Để tái hiện phép đo trên database thực hành, chạy `node scripts/seed.js` rồi `node scripts/explain.js`. Script seed thay các ghi chú mẫu có `owner: 'seed'`.
