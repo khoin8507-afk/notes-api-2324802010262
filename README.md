@@ -26,3 +26,27 @@ Sau khi chèn 2.000 ghi chú mẫu, phép đo với tag `docker` cho thấy qué
 
 [Báo cáo Bài 3, gồm ảnh explain.js và sơ đồ Atlas–HDFS](https://khoin8507-afk.github.io/notes-api-2324802010262/bai-3.html)
 
+
+## Bài 4 — Bảo mật ứng dụng đám mây
+
+- Quản lý bí mật bằng GitHub Codespaces Secrets.
+- Bật Secret Protection, Push Protection và Dependabot.
+- Xác thực JWT với thời hạn 1 giờ, băm mật khẩu bằng bcrypt.
+- Phân quyền truy cập ghi chú theo chủ sở hữu.
+- Tích hợp Helmet, chống NoSQL Injection và Rate Limit.
+- Kiểm thử xác thực và phân quyền đạt 10/10 trường hợp.
+- Rate Limit chặn yêu cầu từ lần đăng nhập thứ 21.
+- npm audit: 0 vulnerabilities.
+- Trivy: so sánh Docker image Alpine và Full.
+
+| Base Image | Kích thước (MB) | HIGH | CRITICAL |
+|---|---:|---:|---:|
+| node:22-alpine | 288.81 | 10 | 0 |
+| node:22 | 1673.65 | 479 | 20 |
+
+Alpine giảm 82,74% kích thước và 98,00% số phát hiện
+lỗ hổng HIGH/CRITICAL so với Full.
+
+**Báo cáo:** [Bài 4 — Bảo mật ứng dụng đám mây](https://khoin8507-afk.github.io/notes-api-2324802010262/bai-4.html)
+
+

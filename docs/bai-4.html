@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 4 — Bảo mật ứng dụng đám mây</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f3f3f3;
+      color: #202020;
+      font: 16px/1.7 Arial, sans-serif;
+    }
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 32px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #dedede;
+      box-shadow: 0 8px 30px rgba(0,0,0,.04);
+    }
+    h1, h2, h3 { line-height: 1.4; }
+    h1, h2 { color: #171717; }
+    h2 {
+      margin-top: 36px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #dddddd;
+    }
+    .info, .note {
+      background: #f5f5f5;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+    a { text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #555; }
+    a:focus-visible, summary:focus-visible {
+      outline: 2px solid #222; outline-offset: 4px;
+    }
+    .info { border-left: 4px solid #222; }
+    .note { border-left: 4px solid #888; }
+    .info p { margin: 6px 0; }
+    td:first-child { font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+    th, td {
+      border: 1px solid #d4d4d4;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #ededed; }
+    a { color: #171717; overflow-wrap: anywhere; }
+    code {
+      background: #f3f3f3;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    figure { margin: 24px 0; }
+    figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: auto;
+      border: 1px solid #d4d4d4;
+      border-radius: 8px;
+    }
+    .phone { max-height: 720px; }
+    figcaption {
+      margin-top: 8px;
+      text-align: center;
+      color: #555555;
+      font-size: 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 12px;
+      background: #f3f3f3;
+      border-radius: 6px;
+    }
+    details { margin: 14px 0; }
+    footer {
+      margin-top: 30px;
+      color: #666666;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      main { margin: 10px; padding: 18px; }
+      h1 { font-size: 25px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+<nav aria-label="Báo cáo thực hành"><a href="index.html">Bài 1</a> · <a href="bai-2.html">Bài 2</a> · <a href="bai-3.html">Bài 3</a> · <strong aria-current="page">Bài 4</strong></nav>
+<h1>Bài 4. Bảo mật ứng dụng đám mây</h1>
+<div class="info">
+<p><strong>Sinh viên</strong> Nguyễn Nguyên Khôi</p>
+<p><strong>MSSV</strong> 2324802010262 · <strong>Lớp</strong> D23CNTT03</p>
+<p><strong>Ngày thực hiện</strong> 26/11/2026</p>
+<p><a href="https://github.com/khoin8507-afk/notes-api-2324802010262">Kho mã nguồn</a></p>
+</div>
+<h2>1. Mục tiêu</h2>
+<p>Bảo vệ Notes API kế thừa từ Bài 3 bằng quản lý bí mật trên đám mây, xác thực JWT và phân quyền theo chủ sở hữu. Kiểm tra lỗ hổng của thư viện và Docker image bằng npm audit, Dependabot và Trivy; đánh giá rủi ro khi mở Network Access của MongoDB Atlas. Bài thực hành gắn với CELO4.1, 4.2, 6.1.</p>
+<h2>2. Quản lý bí mật và cấu hình bảo mật (Phần A)</h2>
+<ul>
+<li><strong>Môi trường.</strong> GitHub Codespaces, Node.js 22.23.4, npm 10.9.9, Docker 29.9.3; MongoDB Atlas Free tại AWS Hong Kong và Supabase Storage từ Bài 3.</li>
+<li><strong>Kiểm tra Git.</strong> Chạy <code>git log --all -p | grep -iE "mongodb\+srv|supabase|secret"</code>. Kết quả quan sát không phát hiện giá trị bí mật thật; <code>git ls-files .env</code> và <code>git log --all -- .env</code> không trả dòng nào. Cả .gitignore và .dockerignore loại trừ .env và .env.*. Đây là kiểm tra sơ bộ, không chứng minh mọi bí mật đều chưa từng bị lộ.</li>
+<li><strong>Codespaces Secrets.</strong> Tạo <code>MONGODB_URI</code>, <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_KEY</code>, <code>JWT_SECRET</code>. JWT secret được sinh bằng crypto.randomBytes(32), biểu diễn 64 ký tự hex. Sau Rebuild, bốn biến đều tồn tại, ba biến cũ khớp .env. Xóa .env và kiểm tra lại kết nối thành công sau khi sửa IP Access List.</li>
+<li><strong>GitHub.</strong> Dependency graph, Dependabot alerts, Secret Protection và Push protection đều bật. CR_PAT từ Bài 2 được giữ nguyên.</li>
+</ul>
+<details><summary>Minh chứng kiểm tra Git và Codespaces Secrets</summary>
+<figure><a href="images/bai-4/01-git-secret-check.png"><img src="images/bai-4/01-git-secret-check.png" alt="Kiểm tra lịch sử Git và các quy tắc bỏ qua .env" loading="lazy"></a><figcaption>Kiểm tra lịch sử Git và các quy tắc bỏ qua .env</figcaption></figure>
+<figure><a href="images/bai-4/02-codespaces-secrets.png"><img src="images/bai-4/02-codespaces-secrets.png" alt="Danh sách Secrets, không hiển thị giá trị bí mật" loading="lazy"></a><figcaption>Danh sách Secrets, không hiển thị giá trị bí mật</figcaption></figure>
+</details>
+<details><summary>Minh chứng cấu hình bảo mật GitHub</summary>
+<figure><a href="images/bai-4/03a-push-protection.png"><img src="images/bai-4/03a-push-protection.png" alt="Secret Protection và Push protection đang bật" loading="lazy"></a><figcaption>Secret Protection và Push protection đang bật</figcaption></figure>
+<figure><a href="images/bai-4/03b-dependabot.png"><img src="images/bai-4/03b-dependabot.png" alt="Dependency graph và Dependabot alerts đang bật" loading="lazy"></a><figcaption>Dependency graph và Dependabot alerts đang bật</figcaption></figure>
+</details>
+<h2>3. Xác thực và phân quyền (Phần B)</h2>
+<p>Cài đặt bcryptjs 3.0.3, jsonwebtoken 9.0.3, helmet 8.3.0 và express-rate-limit 8.7.5.</p>
+<ul><li><code>src/models/user.js</code>: lưu email duy nhất và passwordHash; bcrypt sử dụng cost factor 10.</li><li><code>src/routes/auth.js</code>: đăng ký, đăng nhập, kiểm tra kiểu dữ liệu, giới hạn mật khẩu 72 byte và cấp JWT HS256 có thời hạn 1 giờ.</li><li><code>src/middleware/auth.js</code>: kiểm tra Bearer token, chữ ký, thời hạn và định dạng sub.</li><li><code>src/routes/notes.js</code>: bắt buộc JWT; truy vấn ghi chú theo owner và ID, gán owner từ JWT khi tạo, không nhận owner từ client.</li><li><code>src/app.js</code>: Helmet, giới hạn JSON 100 KB, sanitizeFilter, trust proxy = 1 và giới hạn 20 yêu cầu /auth trong 15 phút.</li><li><code>src/server.js</code>: kiểm tra biến môi trường cần thiết trước khi kết nối Atlas và lắng nghe cổng 3000.</li></ul>
+<h3>3.1. Kiểm thử xác thực và quyền sở hữu</h3>
+<p>Hai tài khoản thử nghiệm A và B đăng nhập thành công. Đăng ký B trả 201, đăng ký trùng A trả 409. GET / trả 200. Ghi chú mới của A có trường owner; danh sách của B trả 200 với mảng rỗng. Các ghi chú mẫu cũ không thuộc hai người dùng mới.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Trường hợp</th><th scope="col">Mong đợi</th><th scope="col">Kết quả quan sát</th></tr></thead><tbody>
+<tr><td>Không token</td><td>401</td><td>401 · Đạt</td></tr>
+<tr><td>Token không hợp lệ</td><td>401</td><td>401 · Đạt</td></tr>
+<tr><td>Token hợp lệ A</td><td>200</td><td>200 · Đạt</td></tr>
+<tr><td>Token hợp lệ B</td><td>200</td><td>200 · Đạt</td></tr>
+<tr><td>A đọc ghi chú A</td><td>200</td><td>200 · Đạt</td></tr>
+<tr><td>B đọc ghi chú A</td><td>404</td><td>404 · Đạt</td></tr>
+<tr><td>B sửa ghi chú A</td><td>404</td><td>404 · Đạt</td></tr>
+<tr><td>B xóa ghi chú A</td><td>404</td><td>404 · Đạt</td></tr>
+<tr><td>B upload vào ghi chú A</td><td>404</td><td>404 · Đạt</td></tr>
+<tr><td>A vẫn đọc được ghi chú A</td><td>200</td><td>200 · Đạt</td></tr>
+<tr><td>A upload tệp vào ghi chú A</td><td>200</td><td>200 · Đạt</td></tr>
+<tr><td>NoSQL Injection — email là đối tượng, mật khẩu ngắn</td><td>401</td><td>401 · Đạt</td></tr>
+<tr><td>NoSQL Injection — email là đối tượng, mật khẩu đủ độ dài</td><td>401</td><td>401 · Đạt</td></tr>
+</tbody></table></div>
+<p class="note">10/10 tình huống trong phép thử tổng hợp đạt yêu cầu. Ba phép thử bổ sung cũng đạt. A upload thành công và nhận attachmentUrl; B bị từ chối. Mã 404 không tiết lộ ghi chú của người khác có tồn tại hay không.</p>
+<details open><summary>Minh chứng JWT và phân quyền</summary>
+<figure><a href="images/bai-4/04-auth-owner-test.png"><img src="images/bai-4/04-auth-owner-test.png" alt="Kết quả tổng hợp 10 trường hợp xác thực và phân quyền" loading="lazy"></a><figcaption>Kết quả tổng hợp 10 trường hợp xác thực và phân quyền</figcaption></figure>
+</details>
+<h3>3.2. Giới hạn tần suất đăng nhập</h3>
+<p>Khởi động lại server để reset bộ đếm trong bộ nhớ, sau đó gửi 25 yêu cầu đăng nhập sai liên tiếp từ localhost, không gửi thêm yêu cầu /auth trước phép đo.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Lần yêu cầu</th><th scope="col">HTTP</th><th scope="col">Số yêu cầu</th></tr></thead><tbody>
+<tr><td>1–20</td><td>401</td><td>20</td></tr>
+<tr><td>21–25</td><td>429</td><td>5</td></tr>
+</tbody></table></div>
+<p class="note">Lần 21 bắt đầu bị chặn đúng cấu hình 20 yêu cầu trong 15 phút. Phép thử xác nhận ngưỡng chặn, chưa đo thời điểm hết cửa sổ 15 phút.</p>
+<figure><a href="images/bai-4/05-security-test.png"><img src="images/bai-4/05-security-test.png" alt="Kết quả 25 yêu cầu: lần 20 trả 401, lần 21 trả 429" loading="lazy"></a><figcaption>Kết quả 25 yêu cầu: lần 20 trả 401, lần 21 trả 429</figcaption></figure>
+<h2>4. Quét lỗ hổng (Phần C)</h2>
+<p><code>npm audit --omit=dev</code> trả về 0 vulnerabilities. Dependabot có 0 cảnh báo mở và 0 cảnh báo đóng tại thời điểm kiểm tra trước khi push Bài 4; chưa phản ánh dependency mới chưa được push.</p>
+<details><summary>Minh chứng npm audit</summary>
+<figure><a href="images/bai-4/06-npm-audit.png"><img src="images/bai-4/06-npm-audit.png" alt="Kết quả npm audit và cấu hình Dockerfile, .dockerignore" loading="lazy"></a><figcaption>Kết quả npm audit và cấu hình Dockerfile, .dockerignore</figcaption></figure>
+</details>
+<p>Build hai image từ cùng mã nguồn và package-lock.json, chỉ thay base image từ node:22-alpine sang node:22 bằng Dockerfile.full. Cả hai cài dependency production bằng npm ci --omit=dev và chạy với USER node. Quét Trivy qua Docker, dùng cùng cache cơ sở dữ liệu, lọc HIGH và CRITICAL, xuất JSON rồi tổng hợp số phát hiện theo thành phần. Kích thước lấy từ docker image inspect, quy đổi byte sang MB thập phân.</p>
+<h3>4.1. Bảng so sánh Docker image</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Image</th><th scope="col">Kích thước (MB)</th><th scope="col">HIGH</th><th scope="col">CRITICAL</th><th scope="col">Tổng</th></tr></thead><tbody>
+<tr><td>node:22-alpine</td><td>288,81</td><td>10</td><td>0</td><td>10</td></tr>
+<tr><td>node:22</td><td>1.673,65</td><td>479</td><td>20</td><td>499</td></tr>
+</tbody></table></div>
+<figure><div class="table-wrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 235" role="img" aria-labelledby="chart-title" style="width:100%;min-width:530px;height:auto"><title id="chart-title">So sánh kích thước và số phát hiện HIGH, CRITICAL</title><g font-family="Arial,sans-serif" fill="#222" font-size="14"><text x="12" y="24" font-weight="bold">Kích thước (MB)</text><text x="12" y="58">Alpine</text><text x="12" y="91">Full</text><rect x="100" y="40" width="91.46" height="24" fill="#999"/><rect x="100" y="73" width="530" height="24" fill="#444"/><text x="202" y="57">288,81</text><text x="640" y="90">1.673,65</text><text x="12" y="136" font-weight="bold">Số phát hiện HIGH + CRITICAL</text><text x="12" y="170">Alpine</text><text x="12" y="203">Full</text><rect x="100" y="152" width="10.62" height="24" fill="#999"/><rect x="100" y="185" width="530" height="24" fill="#444"/><text x="122" y="169">10</text><text x="640" y="202">499</text></g></svg></div><figcaption>So sánh hai image tại thời điểm quét 14:36:39 ngày 26/11/2026 (UTC+7).</figcaption></figure>
+<p class="note">Alpine giảm khoảng <strong>82,74%</strong> kích thước và <strong>98,00%</strong> số phát hiện HIGH/CRITICAL so với Full. Full lớn gấp khoảng 5,79 lần. Kết quả chỉ phản ánh các phát hiện của công cụ tại thời điểm quét, không chứng minh an toàn tuyệt đối.</p>
+<figure><a href="images/bai-4/07-trivy-comparison.png"><img src="images/bai-4/07-trivy-comparison.png" alt="Bảng kết quả Trivy tổng hợp từ hai tệp JSON" loading="lazy"></a><figcaption>Bảng kết quả Trivy tổng hợp từ hai tệp JSON</figcaption></figure>
+<h3>4.2. Phân tích và ưu tiên xử lý</h3>
+<p>Trong Alpine 3.24.4, nhóm hệ điều hành có 0 HIGH và 0 CRITICAL; nhóm Node.js packages có 10 HIGH và 0 CRITICAL. npm audit và Trivy có phạm vi khác nhau; chưa xác định đường dẫn cài đặt cụ thể của từng package.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Package</th><th scope="col">Phiên bản đang dùng</th><th scope="col">Số HIGH</th><th scope="col">Bản vá tham khảo theo Trivy</th></tr></thead><tbody>
+<tr><td>brace-expansion</td><td>2.0.2</td><td>5</td><td>2.1.6 (nhánh 2.x)</td></tr>
+<tr><td>ip-address</td><td>10.1.0</td><td>1</td><td>10.3.1</td></tr>
+<tr><td>pacote</td><td>19.0.2 và 20.0.1</td><td>2</td><td>21.5.1</td></tr>
+<tr><td>picomatch</td><td>4.0.3</td><td>1</td><td>4.0.4</td></tr>
+<tr><td>sigstore</td><td>3.1.0</td><td>1</td><td>4.1.1</td></tr>
+</tbody></table></div>
+<p>CVE-2026-9496 xuất hiện ở hai phiên bản pacote, nên 10 phát hiện tương ứng 9 mã CVE khác nhau. Ưu tiên xem xét 20 phát hiện CRITICAL của Full, sau đó đánh giá khả năng khai thác, phạm vi ảnh hưởng và bản vá của các gói HIGH. Đề xuất tiếp tục dùng Alpine, cập nhật base image và quét lại sau khi kiểm thử tương thích; chưa thực hiện cập nhật trong phép đo này.</p>
+<h2>5. Phân tích quyết định có rủi ro (Phần D)</h2>
+<p>IP Access List ban đầu chỉ có một IP /32. Sau khi thêm 0.0.0.0/0, API kết nối lại thành công. Cấu hình cho phép mọi IPv4 thử kết nối tới cluster, nhưng vẫn phải xác thực và dùng TLS. Atlas xác nhận tài khoản notes_app có SCRAM và quyền readWrite@notes; tài khoản quản trị riêng có atlasAdmin@admin.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Rủi ro cụ thể</th><th scope="col">Biện pháp bù trừ</th><th scope="col">Phương án tốt hơn</th></tr></thead><tbody>
+<tr><td>Mọi IPv4 có thể thử kết nối Atlas</td><td>Xác thực database user; mật khẩu ngẫu nhiên theo cấu hình bài thực hành</td><td>IP đi ra cố định và allowlist hẹp</td></tr>
+<tr><td>Lộ thông tin kết nối</td><td>Codespaces Secrets, Git ignore, Push protection</td><td>Xoay vòng bí mật, quản lý secret tập trung</td></tr>
+<tr><td>Tài khoản DB bị chiếm quyền</td><td>notes_app chỉ có readWrite trên notes</td><td>Phân quyền chi tiết hơn, bảo vệ tài khoản quản trị riêng</td></tr>
+<tr><td>Nghe lén đường truyền</td><td>TLS bắt buộc của Atlas</td><td>TLS kết hợp Private Endpoint/VPC peering trên gói phù hợp</td></tr>
+</tbody></table></div>
+<figure><a href="images/bai-4/08-network-access.png"><img src="images/bai-4/08-network-access.png" alt="IP Access List có 0.0.0.0/0 ở trạng thái Active" loading="lazy"></a><figcaption>IP Access List có 0.0.0.0/0 ở trạng thái Active</figcaption></figure>
+<p class="note">Nên thu hẹp hoặc xóa quyền truy cập toàn mạng sau khi không còn cần dùng. Bucket attachments vẫn Public nên người có URL trực tiếp vẫn đọc được tệp; cần chuyển sang private bucket và URL ký có thời hạn nếu lưu dữ liệu riêng tư. Rate Limit hiện lưu trong bộ nhớ, chưa phù hợp cho nhiều instance. Cấu hình trust proxy cần kiểm tra khi triển khai thực tế.</p>
+<h2>6. Sự cố và cách khắc phục</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Sự cố</th><th scope="col">Phân tích và xử lý</th><th scope="col">Kết quả</th></tr></thead><tbody>
+<tr><td>MongooseServerSelectionError / ReplicaSetNoPrimary</td><td>Cả ba nút báo ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR; thử 30 giây vẫn lỗi. Kiểm tra Atlas thấy IP Access List thiếu nguồn kết nối phù hợp; thêm 0.0.0.0/0.</td><td>npm start kết nối Atlas thành công, không cần tạo lại .env.</td></tr>
+<tr><td>GET /notes trả 500, TypeError</td><td>Dán nhầm Notes Router vào src/models/note.js. Sao chép mã sang src/routes/notes.js rồi git restore src/models/note.js.</td><td>GET / trả 200; /notes thiếu token hoặc token sai trả 401.</td></tr>
+</tbody></table></div>
+<h2>7. Trả lời câu hỏi phản biện</h2>
+<ol>
+<li><p><strong>Nếu JWT bị lộ trong một giờ còn hiệu lực?</strong> Máy chủ hiện chỉ xác minh chữ ký và hạn dùng, không có cơ chế thu hồi từng token. Người có token có thể mạo danh chủ sở hữu cho tới khi hết hạn. Đổi JWT_SECRET vô hiệu hóa toàn bộ token cũ nhưng buộc mọi người đăng nhập lại. Có thể dùng access token ngắn hạn kết hợp refresh token có thể thu hồi; nếu cần thu hồi access token ngay, dùng denylist theo jti hoặc dấu vân tay token cho tới khi hết hạn. Chi phí là lưu trạng thái, thêm truy vấn và độ phức tạp quản lý phiên.</p></li>
+<li><p><strong>Vì sao Alpine thường có ít lỗ hổng hơn?</strong> Alpine tối giản, ít gói hệ thống và dùng musl/BusyBox thay cho nhiều thành phần của Debian đầy đủ. Trong phép đo, Alpine có 10 HIGH và 0 CRITICAL, Full có 479 HIGH và 20 CRITICAL. Số lượng phát hiện thấp không đồng nghĩa an toàn tuyệt đối; cần xem mức độ, khả năng khai thác, phạm vi sử dụng, dữ liệu CVE và bản vá. Cần cập nhật và quét lại định kỳ.</p></li>
+<li><p><strong>Trách nhiệm chia sẻ giữa nhà cung cấp và nhóm phát triển?</strong> MongoDB Atlas và Supabase quản lý hạ tầng vật lý, nền tảng dịch vụ, cập nhật thành phần được quản lý và cung cấp cơ chế TLS, xác thực, quyền truy cập. Nhóm phát triển chịu trách nhiệm cấu hình IP Access List, database user, bucket, bí mật, JWT, bcrypt, phân quyền owner, kiểm tra đầu vào, Docker image, dependency và xử lý lỗ hổng. Nhà cung cấp cung cấp cơ chế bảo mật nhưng không thay nhóm kiểm tra logic ứng dụng.</p></li>
+</ol>
+<h2>8. Kết luận</h2>
+<p>Hoàn thành các điểm kiểm tra kỹ thuật: kiểm tra sơ bộ Git, chuyển bí mật vào Codespaces Secrets và bật Push Protection; 10/10 phép thử tổng hợp JWT và owner đúng kỳ vọng; 25/25 yêu cầu đăng nhập cho mã HTTP đúng với ngưỡng chặn; npm audit không phát hiện lỗ hổng, Trivy cung cấp bảng so sánh hai image. Hai sự cố thực tế được khắc phục. Hạn chế còn lại là IP Access List rộng, bucket công khai, JWT chưa thu hồi riêng lẻ và các phát hiện HIGH cần xử lý. Báo cáo ghi nhận kết quả tại thời điểm thực hành, chưa xác nhận trạng thái sau commit và push Bài 4.</p>
+<footer>Bài 4 · Nguyễn Nguyên Khôi · MSSV 2324802010262</footer>
+</main>
+</body>
+</html>

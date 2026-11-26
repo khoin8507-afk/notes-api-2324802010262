@@ -1,108 +1,149 @@
+
 const express = require('express');
 const multer = require('multer');
-const { randomUUID } = require('node:crypto');
-
 const Note = require('../models/note');
 const { bucket } = require('../storage');
+const requireAuth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Bao ve tat ca endpoint /notes bang JWT
+router.use(requireAuth);
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }
 });
 
-// Liệt kê ghi chú, có thể lọc theo tag.
+// GET - Lay danh sach ghi chu cua nguoi dang nhap
 router.get('/', async (req, res) => {
-  const filter = req.query.tag ? { tags: String(req.query.tag) } : {};
-  const notes = await Note.find(filter).sort({ createdAt: -1 }).limit(50);
+  const filter = { owner: req.user.sub };
 
-  return res.json(notes);
-});
-
-// Đọc một ghi chú theo ID.
-router.get('/:id', async (req, res) => {
-  const note = await Note.findById(req.params.id);
-
-  if (!note) {
-    return res.status(404).json({ error: 'Không tìm thấy ghi chú' });
+  if (req.query.tag) {
+    filter.tags = String(req.query.tag);
   }
 
-  return res.json(note);
+  const notes = await Note.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(50);
+
+  res.json(notes);
 });
 
-// Tạo ghi chú mới.
+// GET - Lay chi tiet ghi chu
+router.get('/:id', async (req, res) => {
+  const note = await Note.findOne({
+    _id: req.params.id,
+    owner: req.user.sub
+  });
+
+  if (!note) {
+    return res.status(404).json({
+      error: 'Không tìm thấy ghi chú'
+    });
+  }
+
+  res.json(note);
+});
+
+// POST - Tao ghi chu moi
 router.post('/', async (req, res) => {
   const { title, content, tags } = req.body ?? {};
-  const note = await Note.create({ title, content, tags });
 
-  return res.status(201).json(note);
+  const note = await Note.create({
+    title,
+    content,
+    tags,
+    owner: req.user.sub
+  });
+
+  res.status(201).json(note);
 });
 
-// Cập nhật ghi chú.
+// PUT - Cap nhat ghi chu cua chinh minh
 router.put('/:id', async (req, res) => {
   const { title, content, tags } = req.body ?? {};
-  const note = await Note.findByIdAndUpdate(
-    req.params.id,
+
+  const note = await Note.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      owner: req.user.sub
+    },
     { title, content, tags },
     { new: true, runValidators: true }
   );
 
   if (!note) {
-    return res.status(404).json({ error: 'Không tìm thấy ghi chú' });
+    return res.status(404).json({
+      error: 'Không tìm thấy ghi chú'
+    });
   }
 
-  return res.json(note);
+  res.json(note);
 });
 
-// Xóa ghi chú.
+// DELETE - Xoa ghi chu cua chinh minh
 router.delete('/:id', async (req, res) => {
-  const note = await Note.findByIdAndDelete(req.params.id);
-
-  if (!note) {
-    return res.status(404).json({ error: 'Không tìm thấy ghi chú' });
-  }
-
-  return res.status(204).end();
-});
-
-// Tải tệp lên Supabase và lưu URL vào ghi chú.
-router.post('/:id/attachment', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Thiếu tệp ở trường "file"' });
-  }
-
-  const note = await Note.findById(req.params.id);
-
-  if (!note) {
-    return res.status(404).json({ error: 'Không tìm thấy ghi chú' });
-  }
-
-  const safeName = req.file.originalname
-    .normalize('NFD')
-    .replace(/[^\w.-]/g, '_');
-
-  const path = `${note._id}/${randomUUID()}-${safeName}`;
-  const attachments = bucket();
-
-  const { error } = await attachments.upload(path, req.file.buffer, {
-    contentType: req.file.mimetype
+  const note = await Note.findOneAndDelete({
+    _id: req.params.id,
+    owner: req.user.sub
   });
 
-  if (error) {
-    console.error('Supabase Storage:', {
-      name: error.name,
-      status: error.statusCode ?? error.status,
-      message: error.message
+  if (!note) {
+    return res.status(404).json({
+      error: 'Không tìm thấy ghi chú'
     });
-
-    return res.status(502).json({ error: 'Không tải được tệp lên Storage' });
   }
 
-  note.attachmentUrl = attachments.getPublicUrl(path).data.publicUrl;
-  await note.save();
-
-  return res.json(note);
+  res.status(204).end();
 });
+
+// POST - Tai tep dinh kem len Supabase
+router.post(
+  '/:id/attachment',
+  upload.single('file'),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Thiếu tệp ở trường "file"'
+      });
+    }
+
+    const note = await Note.findOne({
+      _id: req.params.id,
+      owner: req.user.sub
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        error: 'Không tìm thấy ghi chú'
+      });
+    }
+
+    const safeName = req.file.originalname
+      .normalize('NFD')
+      .replace(/[^\w.-]/g, '_');
+
+    const path =
+      `${note._id}/${Date.now()}-${safeName}`;
+
+    const { error } = await bucket().upload(
+      path,
+      req.file.buffer,
+      {
+        contentType: req.file.mimetype
+      }
+    );
+
+    if (error) throw error;
+
+    note.attachmentUrl =
+      bucket().getPublicUrl(path).data.publicUrl;
+
+    await note.save();
+
+    res.json(note);
+  }
+);
 
 module.exports = router;
